@@ -5,55 +5,81 @@
   <meta charset="UTF-8">
   <title>Игра Мемори</title>
   <link rel="stylesheet" href="css/style.css">
-  <script src="./vendor/react.development.js"></script>
-  <script src="./vendor/react-dom.development.js"></script>
-  <script src="./vendor/babel.min.js"></script>
-  <script src="./data.js"> </script>
+  <script src="/vendor/react.development.js"></script>
+  <script src="/vendor/react-dom.development.js"></script>
+  <script src="/vendor/babel.min.js"></script>
+  <script src="/data.js"> </script>
 </head>
 
 <body>
-  <div id="root">Корневой элемент</div>
+  <div id="root"></div>
   <script type="text/babel">
     const container = document.getElementById('root');
     const root = ReactDOM.createRoot(container);
-    root.render(<App images={images} visibleItems={visibleItems} finishedItems={finishedItems} />);
+    root.render(<App images={images} />);
+    const finishedItems = [];
+    function App({ images = [], finishedItems = [] }) {
+      const [stepsCount, setStepsCount] = React.useState(0);
 
-    function App({ images = [], visibleItems = [], finishedItems = [] }) {
+      const checkItems = () => {
+        setStepsCount((count) => ++count);
+      }
+
       return (
         <section className="game container">
-          <Grid images={images} visibleItems={visibleItems} finishedItems={finishedItems} />
+          <p> за {stepsCount} шагов</p>
+          <Grid images={images} finishedItems={finishedItems} checkItems={checkItems} />
         </section>
       );
     }
 
-    // Формируем список карточек
-    function Grid() {
-      const cards = images.map((item) => (
-        <Card
-          key={item.id}
-          url={item.url}
-          description={item.description}
-          isVisible={visibleItems.includes(item.id)}
-          isFinished={finishedItems.includes(item.id)}
-        />
-      ));
+    function Grid({ images, finishedItems, checkItems }) {
+      const [isVisible, setVisibleItems] = React.useState([]);
+
+      const handleCardClick = (id) => {
+        if (isVisible.includes(id)) {
+          return;
+        }
+        checkItems();
+        setVisibleItems((items) => [...items, id]);
+      };
 
       return (
-        <ul className="cards cards-theme-cars">
-          {cards}
+        <ul className="cards">
+          {images.map((item) => (
+            <Card
+              key={item.id}
+              id={item.id}
+              url={item.url}
+              description={item.description}
+              isVisible={isVisible.includes(item.id)}
+              isFinished={finishedItems.includes(item.id)}
+              onCardClick={handleCardClick}
+            />
+          ))}
         </ul>
       );
     }
 
-    // Карточка
-    function Card({ url, description, isVisible = false, isFinished = true }) {
-      const className = `card ${isVisible ? 'card-show' : ''
+    function Card({ url, description, isVisible, isFinished, onCardClick, id }) {
+      const className = `${isVisible ? 'card-show' : ''
         } ${isFinished ? 'card-finished' : ''
         }`;
 
+      const handleclick = () => {
+        if (isFinished) {
+          return;
+        }
+        onCardClick(id);
+      }
+
       return (
-        <li className={className}>
-          <img src={url} width="204" height="144" alt={description} />
+        <li onClick={handleclick} className={`card ${className}`}>
+          <img
+            width="204" height="144"
+            src={url}
+            alt={description}
+          />
         </li>
       );
     }
